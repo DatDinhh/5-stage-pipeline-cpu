@@ -1,7 +1,7 @@
 # 5-stage-pipeline-cpu
 A 5-stage pipelined CPU in Verilog with hazard detection, forwarding, branching, and a simple instruction memory.
 
-##1 Overview 
+## 1 Overview 
 
 This repository contains a five-stage pipelined CPU implemented in Verilog. It demonstrates the fundamental concepts of pipelining, hazard detection, and forwarding for a MIPS-like instruction set. The design includes:
 
@@ -13,7 +13,7 @@ Write Back (WB)
 
   Hazard detection logic handles load-use hazards, and a forwarding unit resolves data hazards. Simple branch logic is included for control hazards, and a basic instruction memory supplies instructions.
 
-##2 Features
+## 2 Features
 
 5-stage pipeline (IF, ID, EX, MEM, WB)
 Hazard detection for load-use stalls
@@ -22,7 +22,7 @@ Simple branch and jump logic
 Instruction and data memories modeled in Verilog
 Example programs (loops, branching) loaded into instruction memory
 
-##3 File/Module Structure
+## 3 File/Module Structure
 
 Briefly describe each file or module:
 
