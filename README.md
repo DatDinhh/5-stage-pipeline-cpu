@@ -1,37 +1,103 @@
-# 5_stage_pipeline_cpu
-A 5-stage pipelined CPU in Verilog with hazard detection, forwarding, branching, and a simple instruction memory.
+# 5-Stage Pipelined CPU (Verilog)
 
-## 1 Overview 
+A classic 5-stage pipelined CPU written in Verilog/SystemVerilog with full hazard handling, basic branch prediction, performance counters, and a self-checking simulation environment.
 
-This repository contains a five-stage pipelined CPU implemented in Verilog. It demonstrates the fundamental concepts of pipelining, hazard detection, and forwarding for a MIPS-like instruction set. The design includes:
+##  Project Structure
 
-Instruction Fetch (IF)
-Instruction Decode (ID)
-Execute (EX)
-Memory (MEM)
-Write Back (WB)
+```
+rtl/core/         # CPU RTL design
+  alu.v                 - Arithmetic Logic Unit
+  bpu.v                 - Branch Prediction Unit
+  control_unit.v        - Main control logic
+  cpu_core.v            - Top-level CPU core (pipeline stages + control)
+  csr_perf.v            - Performance counters (cycle, instret, stalls)
+  forwarding_unit.v     - Data forwarding logic
+  hazard_unit.v         - Hazard detection & stall control
+  reg_file.v            - 32x32 Register File
 
-  Hazard detection logic handles load-use hazards, and a forwarding unit resolves data hazards. Simple branch logic is included for control hazards, and a basic instruction memory supplies instructions.
+sim/mem/          # Memory models for simulation
+  rv_mem.v              - Data memory model (configurable wait states)
+  rv_rom.v              - Instruction ROM model (configurable wait states)
 
-## 2 Features
+sim/score/        # Verification helpers
+  scoreboard.v          - Memory-mirroring scoreboard to check load/store correctness
 
-5-stage pipeline (IF, ID, EX, MEM, WB)
-Hazard detection for load-use stalls
-Forwarding/bypassing for data hazards
-Simple branch and jump logic
-Instruction and data memories modeled in Verilog
-Example programs (loops, branching) loaded into instruction memory
+sim/assertions/   # Optional SystemVerilog assertions
+  assertions.sv         - Checks for hazards, flushes, and protocol correctness
 
-## 3 File/Module Structure
+sim/tb/           # Testbenches
+  tb_core.sv             - Top-level CPU + memory + scoreboard testbench
 
-Briefly describe each file or module:
+sim/waves/        # Waveform outputs
+  core.vcd               - Generated VCD file from simulation
+```
 
-cpu_top.v: Top-level module with pipeline registers
-alu.v: ALU for arithmetic/logic operations
-reg_file.v: 32x32 register file
-instr_mem.v: Hard-coded instruction memory with example programs
-data_mem.v: Simple data memory
-control_unit.v: Decodes instructions into control signals
-hazard_unit.v: Detects load-use hazards
-forwarding_unit.v: Resolves data hazards by forwarding
-cpu_tb.v: Testbench for simulation
+##  Features
+
+- **5 Pipeline Stages:** IF, ID, EX, MEM, WB
+- **Hazard Handling:** Load-use stall detection, branch flushes
+- **Forwarding Unit:** Resolves RAW data hazards without stalling
+- **Branch Prediction:** Simple predictor with branch target tracking
+- **Performance Counters:** Cycle count, instructions retired, stalls
+- **Self-Checking Scoreboard:** Verifies load/store correctness at commit
+- **Optional Assertions:** For hazards, flushes, bus handshake correctness
+
+##  Prerequisites
+
+- [Icarus Verilog](http://iverilog.icarus.com/) (iverilog / vvp)
+- [GTKWave](http://gtkwave.sourceforge.net/)
+- PowerShell (for provided run scripts)
+- (Optional) Python 3 — if generating `.hex` ROM images from assembly
+
+##  How to Build & Run
+
+1. **Clone this repo:**
+   ```powershell
+   git clone https://github.com/DatDinhh/5_stage_pipeline_cpu.git
+   cd 5_pipeline_cpu
+   ```
+
+2. **Compile and simulate:**
+   ```powershell
+   $proj = "C:\5_pipeline_cpu"
+   $gtkw = "C:\iverilog\gtkwave\bin\gtkwave.exe"
+
+   Remove-Item -Recurse -Force "$proj\build","$proj\sim\waves" -ErrorAction SilentlyContinue
+   New-Item -ItemType Directory -Force -Path "$proj\build","$proj\sim\waves" | Out-Null
+
+   $srcs = @(
+     "$proj\rtl\core\alu.v",
+     "$proj\rtl\core\bpu.v",
+     "$proj\rtl\core\control_unit.v",
+     "$proj\rtl\core\cpu_core.v",
+     "$proj\rtl\core\csr_perf.v",
+     "$proj\rtl\core\forwarding_unit.v",
+     "$proj\rtl\core\hazard_unit.v",
+     "$proj\rtl\core\reg_file.v",
+     "$proj\sim\mem\rv_mem.v",
+     "$proj\sim\mem\rv_rom.v",
+     "$proj\sim\score\scoreboard.v",
+     "$proj\sim\tb\tb_core.sv"
+   ) | Where-Object { Test-Path $_ }
+
+   iverilog -g2012 -s tb_core -o "$proj\build\sim.out" $srcs
+   Push-Location $proj; vvp ".\build\sim.out"; Pop-Location
+   ```
+
+3. **Open waveform in GTKWave:**
+   ```powershell
+   $latest = Get-ChildItem -Path "$proj\sim\waves" -Filter *.vcd | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+   if ($latest) { & $gtkw $latest.FullName }
+   ```
+
+##  Customization
+
+- **Program ROM:**  
+  Edit `rv_rom.v` and point `$readmemh` to your program `.hex` file.
+- **Memory Wait States:**  
+  Change `RANDOM_WAIT` and `WAIT_MAX` parameters in `rv_mem.v` / `rv_rom.v`.
+- **Assertions:**  
+  Include `sim/assertions/assertions.sv` and compile with `+define+SVA` if your simulator supports SVAs.
+
+##  License
+MIT License — see `LICENSE` for details.
