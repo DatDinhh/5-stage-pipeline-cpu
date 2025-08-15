@@ -59,7 +59,7 @@ sim/waves/        # Waveform outputs
 
 2. **Compile and simulate:**
    ```powershell
-   $proj = "C:\5_pipeline_cpu"
+   $proj = "C:\5_stage_pipeline_cpu"
    $gtkw = "C:\iverilog\gtkwave\bin\gtkwave.exe"
 
    Remove-Item -Recurse -Force "$proj\build","$proj\sim\waves" -ErrorAction SilentlyContinue
